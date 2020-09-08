@@ -13,7 +13,7 @@ var nodemailer = require('nodemailer');
 
 
 
-const userSignup =  (payLoad) => {
+const userSignup = async(payLoad) => {
     try {
         console.log(payLoad)
         let findData = await user.findOne({ email: payLoad.email });
@@ -77,7 +77,7 @@ const userSignup =  (payLoad) => {
 
 //Get All Users
 
-const getAllUsers = async (token) => {
+const getAllUsers = async(token) => {
     console.log("Get all users")
     try {
         let findToken = await adminAuth.findOne({ accessToken: token });
@@ -103,7 +103,7 @@ const getAllUsers = async (token) => {
 
 //Delete All Users
 
-const deleteAllUsers = async (token) => {
+const deleteAllUsers = async(token) => {
     console.log("Delete All Users")
     try {
         let findToken = await adminAuth.findOne({ accessToken: token });
@@ -132,43 +132,42 @@ const deleteAllUsers = async (token) => {
 
 //verifyOTP:-
 
-const verifyOTPServices = async (payLoad) => {
-    try {
-        let find = await user.findOne({ email: payLoad.username });
-        console.log(find)
-        if (find) {
-            if (find.isVerified == false) {
-                if (find.otp == payLoad.otp) {
-                    var userData = await user.updateOne({
-                        email: payLoad.username
-                    },
-                        {
+const verifyOTPServices = async(payLoad) => {
+        try {
+            let find = await user.findOne({ email: payLoad.username });
+            console.log(find)
+            if (find) {
+                if (find.isVerified == false) {
+                    if (find.otp == payLoad.otp) {
+                        var userData = await user.updateOne({
+                            email: payLoad.username
+                        }, {
                             $set: {
                                 isVerified: true
                             }
                         });
+                    } else {
+                        console.log("OTP is not correct")
+                    }
                 } else {
-                    console.log("OTP is not correct")
+                    console.log("User is already verified")
                 }
             } else {
-                console.log("User is already verified")
+                console.log("Mobile no. is not correct")
             }
-        } else {
-            console.log("Mobile no. is not correct")
+            return { find, userData }
+        } catch (error) {
+            console.error(error);
+            res.status(200).json({
+                statusCode: 400,
+                message: "Error",
+                data: {}
+            })
         }
-        return { find, userData }
-    } catch (error) {
-        console.error(error);
-        res.status(200).json({
-            statusCode: 400,
-            message: "Error",
-            data: {}
-        })
     }
-}
-//Payment details:-
+    //Payment details:-
 
-const userPaymentDetails = async (payLoad) => {
+const userPaymentDetails = async(payLoad) => {
     try {
         console.log(payLoad)
         let hashObj1 = cardNo.hashPassword(payLoad.cardNo)
@@ -205,7 +204,7 @@ const userPaymentDetails = async (payLoad) => {
 
 //Signin:-
 
-const userSignIn = async (payLoad) => {
+const userSignIn = async(payLoad) => {
 
     try {
         let data = await user.findOne({ email: payLoad.username });
@@ -241,7 +240,7 @@ const userSignIn = async (payLoad) => {
 
 //Signin via access token:-
 
-const signinViaTokenService = async (token) => {
+const signinViaTokenService = async(token) => {
     try {
         let decodedData = await functions.authenticate(token);
         console.log(decodedData)
@@ -266,7 +265,7 @@ const signinViaTokenService = async (token) => {
 
 //Edit profile
 
-const updateProfile = async (payLoad, token) => {
+const updateProfile = async(payLoad, token) => {
     try {
         let find = await userAuth.findOne({ accessToken: token });
         if (find) {
@@ -274,25 +273,25 @@ const updateProfile = async (payLoad, token) => {
                 if (payLoad.firstName) {
                     var userData = await user.updateOne({
                         email: payLoad.email
-                    },
-                        {
-                            firstName: payLoad.firstName
-                        });
-                } if (payLoad.lastName) {
+                    }, {
+                        firstName: payLoad.firstName
+                    });
+                }
+                if (payLoad.lastName) {
                     var userData = await user.updateOne({
                         email: payLoad.email
-                    },
-                        {
-                            lastName: payLoad.lastName
-                        });
-                } if (payLoad.mobile) {
+                    }, {
+                        lastName: payLoad.lastName
+                    });
+                }
+                if (payLoad.mobile) {
                     var userData = await user.updateOne({
                         email: payLoad.email
-                    },
-                        {
-                            mobile: payLoad.mobile
-                        });
-                } if (payLoad.password) {
+                    }, {
+                        mobile: payLoad.mobile
+                    });
+                }
+                if (payLoad.password) {
                     let hashObj = functions.hashPassword(payLoad.password)
                     console.log(hashObj)
                     delete payLoad.password
@@ -300,11 +299,10 @@ const updateProfile = async (payLoad, token) => {
                     payLoad.password = hashObj.hash
                     var userData = await user.updateOne({
                         email: payLoad.email
-                    },
-                        {
-                            password: payLoad.password,
-                            salt: payLoad.salt
-                        });
+                    }, {
+                        password: payLoad.password,
+                        salt: payLoad.salt
+                    });
                 } else {
                     var Invalid = "Invalid credentials";
                 }
@@ -327,7 +325,7 @@ const updateProfile = async (payLoad, token) => {
 
 //Reset password:-
 
-const resetPassServices = async (payLoad, token) => {
+const resetPassServices = async(payLoad, token) => {
     try {
         let find = await userAuth.findOne({ accessToken: token });
         if (find.username) {
@@ -341,14 +339,12 @@ const resetPassServices = async (payLoad, token) => {
                     delete password;
                     payLoad.salt = hashObj.salt;
                     payLoad.password = hashObj.hash;
-                    var updateData = await user.updateOne({ email: find.username },
-                        {
-                            $set: {
-                                password: payLoad.password,
-                                salt: payLoad.salt
-                            }
-                        },
-                        { new: true });
+                    var updateData = await user.updateOne({ email: find.username }, {
+                        $set: {
+                            password: payLoad.password,
+                            salt: payLoad.salt
+                        }
+                    }, { new: true });
                 } else {
                     var confirm = "Confirm password is not correct"
                 }
@@ -365,7 +361,7 @@ const resetPassServices = async (payLoad, token) => {
 
 //Verify
 
-const userVerify = async (payLoad) => {
+const userVerify = async(payLoad) => {
     try {
         console.log(payLoad.username)
         let find = await user.findOne({ email: payLoad.username });
@@ -373,10 +369,9 @@ const userVerify = async (payLoad) => {
             var otp = Math.floor(1000 + Math.random() * 9000);
             let createData = await user.updateOne({
                 email: payLoad.username
-            },
-                {
-                    otp: otp
-                });
+            }, {
+                otp: otp
+            });
             console.log(createData)
             if (createData) {
                 var smtpTransport = nodemailer.createTransport({
@@ -415,7 +410,7 @@ const userVerify = async (payLoad) => {
 
 //Forgot password:-
 
-const forgotPassServices = async (payLoad) => {
+const forgotPassServices = async(payLoad) => {
     try {
         var findData = await user.findOne({ email: payLoad.username });
         if (!findData) {
@@ -428,14 +423,12 @@ const forgotPassServices = async (payLoad) => {
                     delete password;
                     payLoad.salt = hashObj.salt;
                     payLoad.password = hashObj.hash;
-                    var updateData = await user.updateOne({ email: payLoad.username },
-                        {
-                            $set: {
-                                password: payLoad.password,
-                                salt: payLoad.salt
-                            }
-                        },
-                        { new: true });
+                    var updateData = await user.updateOne({ email: payLoad.username }, {
+                        $set: {
+                            password: payLoad.password,
+                            salt: payLoad.salt
+                        }
+                    }, { new: true });
                 } else {
                     var confirm = "Confirm password is not correct"
                 }
@@ -453,7 +446,7 @@ const forgotPassServices = async (payLoad) => {
 
 //Booking:-
 
-const userBooking = async (payLoad) => {
+const userBooking = async(payLoad) => {
     try {
         var findDriver = await driver.findOne({ email: payLoad.driver });
         var findUser = await user.findOne({ email: payLoad.username });
@@ -483,7 +476,7 @@ const userBooking = async (payLoad) => {
 
 //Get user history
 
-const getUserHistory = async (token) => {
+const getUserHistory = async(token) => {
     console.log("Get user history")
     try {
         console.log("getUserHistory")
@@ -506,7 +499,7 @@ const getUserHistory = async (token) => {
 
 //User Logout
 
-const userLogout = async (token) => {
+const userLogout = async(token) => {
     try {
         let decodeCode = await functions.authenticate(token)
         if (!decodeCode) {
